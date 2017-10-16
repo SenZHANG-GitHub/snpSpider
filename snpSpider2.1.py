@@ -11,6 +11,7 @@ import datetime, requests, re, sys, os, errno
 class snpClass:
     def __init__(self, name):
         self.name = name
+        self.bp = ''
         self.rsgene = []
         self.rseqtl = []
         self.geneInfo = []
@@ -191,6 +192,7 @@ eqtlResult_file = open(eqtlResult_filename, mode='w+')
 snpInfo_list = []
 geneInfo_list = []
 rsSNP_list = []
+rsSNPbp_list = []
 gwasTmp = []
 for line in rsSNP_file.readlines():
     rsSNP_list.append(line.split()[0])
@@ -223,18 +225,21 @@ for rsSNP in rsSNP_list:
     strTmp = re.split(r"chr(\d+):(\d+)-(\d+)", urlSNPInit)
     lowerBP_snp = int(strTmp[2])
     upperBP_snp = int(strTmp[3])
+    snpPos = str((lowerBP_snp+upperBP_snp)/2)
+    snpTmp.bp = snpPos
+    rsSNPbp_list.append(snpPos)
     urlSNP = strTmp[0] + 'chr' + strTmp[1] + ':' + str(lowerBP_snp - 250000 + 250) + '-' + str(upperBP_snp + 250000 - 250) + strTmp[4]
 
 
     print 'opening url... '+ urlSNP
     start_ucsc = datetime.datetime.now()
-    # driver = webdriver.Chrome()
-    driver = webdriver.PhantomJS()
+    driver = webdriver.Chrome()
+    # driver = webdriver.PhantomJS()
     driver.get(urlSNP)
     element = driver.find_element_by_name("hgt.hideAll")
     element.send_keys(Keys.ENTER)
-    select = Select(driver.find_element_by_name('refGene'))
-    select.select_by_visible_text("full")
+    # select = Select(driver.find_element_by_name('refGene'))
+    # select.select_by_visible_text("full")
     select = Select(driver.find_element_by_name('knownGene'))
     select.select_by_visible_text("full")
     select = Select(driver.find_element_by_name('gwasCatalog'))
@@ -275,7 +280,7 @@ for rsSNP in rsSNP_list:
     print '--  --  --  --  --  --  --  --  --  --'
     print 'Crawling the gene data...'
     start_gene = datetime.datetime.now()
-    eleGeneMap = soup.find(attrs={"name": "map_data_refGene"})
+    eleGeneMap = soup.find(attrs={"name": "map_data_knownGene"})
     if str(eleGeneMap) != 'None':
         for eleGene in eleGeneMap:
             if not unicode(eleGene) == '\n':
@@ -382,23 +387,28 @@ for rsSNP in rsSNP_list:
 geneResult_file.write('*******************************************************\n'+
                         'The rsSNPfile investigated: '+rsSNP_filename+'\n'
                         +'The genome assembly used: hg'+str(genomeAssembly)+'\n'
-                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n\n')
+                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n'
+                        +'The corresponding bp: '+', '.join(rsSNPbp_list)+'\n\n')
 gwasResult_file.write('*******************************************************\n'+
                         'The rsSNPfile investigated: '+rsSNP_filename+'\n'
                         +'The genome assembly used: hg'+str(genomeAssembly)+'\n'
-                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n\n')
+                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n'
+                        +'The corresponding bp: '+', '.join(rsSNPbp_list)+'\n\n')
 combinedGWAS_file.write('*******************************************************\n'+
                         'The rsSNPfile investigated: '+rsSNP_filename+'\n'
                         +'The genome assembly used: hg'+str(genomeAssembly)+'\n'
-                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n\n')
+                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n'
+                        +'The corresponding bp: '+', '.join(rsSNPbp_list)+'\n\n')
 combinedGene_file.write('*******************************************************\n'+
                         'The rsSNPfile investigated: '+rsSNP_filename+'\n'
                         +'The genome assembly used: hg'+str(genomeAssembly)+'\n'
-                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n\n')
+                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n'
+                        +'The corresponding bp: '+', '.join(rsSNPbp_list)+'\n\n')
 eqtlResult_file.write('*******************************************************\n'+
                         'The rsSNPfile investigated: '+rsSNP_filename+'\n'
                         +'The genome assembly used: hg'+str(genomeAssembly)+'\n'
-                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n\n')
+                        +'The SNPs investigated: '+', '.join(rsSNP_list)+'\n'
+                        +'The corresponding bp: '+', '.join(rsSNPbp_list)+'\n\n')
 combinedGWAS_file.write('*******************************************************\n'
                             +'The Bands Involved: '+', '.join([x['band'] for x in allInfo])+'\n\n')
 combinedGene_file.write('*******************************************************\n'
